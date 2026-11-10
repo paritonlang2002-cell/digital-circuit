@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Circuit</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+    --bg: #f1f4fb;
+    --card: #ffffff;
+    --text: #202945;
+    --muted: #8790a8;
+    --primary: #5865e8;
+    --primary-light: #edf0ff;
+    --green: #17a875;
+    --red: #e45c68;
+    --wire: #aab3c7;
+    --border: #e7eaf2;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+}
+
+.app {
+    width: 100%;
+    max-width: 760px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.logo {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 10px;
+    border-radius: 18px;
+    background: #5865e8;
+    color: white;
+    font-size: 29px;
+    box-shadow: 0 7px 18px #5865e833;
+}
+
+h1 {
+    font-size: 29px;
+    font-weight: 900;
+    letter-spacing: -.8px;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 12px 35px #26365c0b;
+    margin-bottom: 16px;
+}
+
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.panel-heading h2 {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.level {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 900;
+    padding: 6px 11px;
+    border-radius: 20px;
+}
+
+.instructions {
+    background: #f7f8fd;
+    border-radius: 13px;
+    padding: 13px 15px;
+    color: #68728c;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 17px;
+}
+
+.circuit-board {
+    position: relative;
+    width: 100%;
+    max-width: 590px;
+    height: 300px;
+    margin: 0 auto;
+    background:
+        radial-gradient(#dfe4f0 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-color: #fafbff;
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    overflow: hidden;
+}
+
+.circuit-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.circuit-path {
+    fill: none;
+    stroke: var(--wire);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 10 7;
+}
+
+.circuit-path.active {
+    stroke: #f0a928;
+    stroke-dasharray: none;
+}
+
+.component {
+    position: absolute;
+    width: 100px;
+    height: 88px;
+    border: 2px solid #dfe3ef;
+    border-radius: 15px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: .2s;
+    box-shadow: 0 4px 12px #26365c0c;
+    z-index: 2;
+    font-family: inherit;
+}
+
+.component:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+}
+
+.component.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 4px #5865e81a;
+}
+
+.component.connected {
+    border-color: var(--green);
+    background: #edfaf5;
+}
+
+.component-icon {
+    font-size: 31px;
+    line-height: 1;
+}
+
+.component-name {
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.battery {
+    left: 6%;
+    top: 35%;
+}
+
+.wire {
+    left: 39%;
+    top: 7%;
+}
+
+.bulb {
+    right: 6%;
+    top: 35%;
+}
+
+.return-wire {
+    left: 39%;
+    bottom: 7%;
+}
+
+.bulb-glow {
+    filter: drop-shadow(0 0 5px #ffd34d);
+}
+
+.component.bulb.lit {
+    background: #fff8d9;
+    border-color: #efbd35;
+    box-shadow: 0 0 24px #ffd34d55;
+}
+
+.component.bulb.lit .component-icon {
+    filter: drop-shadow(0 0 12px #ffca35);
+}
+
+.component.bulb.lit .component-name {
+    color: #b17a00;
+}
+
+.component:disabled {
+    cursor: default;
+}
+
+.component:disabled:hover {
+    transform: none;
+}
+
+.connection-label {
+    position: absolute;
+    z-index: 3;
+    color: #9aa3b7;
+    font-size: 10px;
+    font-weight: 900;
+    background: #fafbff;
+    padding: 3px 6px;
+    border-radius: 5px;
+}
+
+.label-top {
+    left: 43%;
+    top: 35%;
+}
+
+.label-bottom {
+    left: 43%;
+    bottom: 35%;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+    border-radius: 13px;
+    background: #f5f6fb;
+    margin-top: 16px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #aab1c2;
+    flex-shrink: 0;
+}
+
+.status.success {
+    background: #eaf9f2;
+    color: #13845d;
+}
+
+.status.success .status-dot {
+    background: var(--green);
+    box-shadow: 0 0 0 4px #17a87520;
+}
+
+.status.error {
+    background: #fff0f1;
+    color: #c74b5b;
+}
+
+.status.error .status-dot {
+    background: var(--red);
+}
+
+.parts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.part {
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 13px 5px;
+    background: white;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    transition: .2s;
+}
+
+.part:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.part.used {
+    border-color: var(--green);
+    background: #edfaf5;
+}
+
+.part span {
+    display: block;
+    font-size: 25px;
+    margin-bottom: 4px;
+}
+
+.part strong {
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 17px;
+}
+
+.btn {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 17px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.btn:active {
+    transform: scale(.97);
+}
+
+.primary {
+    background: var(--primary);
+    color: white;
+    flex: 1;
+}
+
+.secondary {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.explanation {
+    display: none;
+    background: #f4f8ff;
+    border: 1px solid #dce6ff;
+    border-radius: 14px;
+    padding: 15px;
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.explanation.show {
+    display: block;
+}
+
+.explanation strong {
+    color: var(--primary);
+}
+
+.lesson {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.lesson-card {
+    background: #f7f8fc;
+    padding: 14px;
+    border-radius: 13px;
+}
+
+.lesson-card h3 {
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.lesson-card p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 5px;
+}
+
+@media (max-width: 560px) {
+    .panel {
+        padding: 16px;
+    }
+
+    .circuit-board {
+        height: 270px;
+    }
+
+    .component {
+        width: 78px;
+        height: 76px;
+    }
+
+    .component-icon {
+        font-size: 26px;
+    }
+
+    .component-name {
+        font-size: 10px;
+    }
+
+    .battery {
+        left: 3%;
+    }
+
+    .bulb {
+        right: 3%;
+    }
+
+    .wire, .return-wire {
+        left: calc(50% - 39px);
+    }
+
+    .label-top, .label-bottom {
+        left: calc(50% - 28px);
+    }
+
+    .parts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .connection-label {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 360px) {
+    .circuit-board {
+        height: 245px;
+    }
+
+    .component {
+        width: 69px;
+        height: 70px;
+    }
+
+    .component-icon {
+        font-size: 23px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <header>
+        <div class="logo">⚡</div>
+        <h1>Digital Circuit</h1>
+        <p class="subtitle">Build a circuit. Complete the loop. Light the bulb!</p>
+    </header>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>🔬 Your Circuit Board</h2>
+            <span class="level">LEVEL 1 · SIMPLE CIRCUIT</span>
+        </div>
+
+        <div class="instructions">
+            Select the battery, connecting wire, bulb and return wire in the correct order. Complete the loop to make the bulb glow!
+        </div>
+
+        <div class="circuit-board">
+            <svg class="circuit-svg" viewBox="0 0 590 300" preserveAspectRatio="none">
+                <path id="topPath" class="circuit-path" d="M 105 150 L 295 40 L 485 150"/>
+                <path id="bottomPath" class="circuit-path" d="M 485 150 L 295 260 L 105 150"/>
+            </svg>
+
+            <button class="component battery" id="battery" data-part="battery">
+                <span class="component-icon">🔋</span>
+                <span class="component-name">Battery</span>
+            </button>
+
+            <button class="component wire" id="wire" data-part="wire">
+                <span class="component-icon">〰️</span>
+                <span class="component-name">Connecting Wire</span>
+            </button>
+
+            <button class="component bulb" id="bulb" data-part="bulb">
+                <span class="component-icon" id="bulbIcon">💡</span>
+                <span class="component-name" id="bulbName">Bulb</span>
+            </button>
+
+            <button class="component return-wire" id="returnWire" data-part="returnWire">
+                <span class="component-icon">〰️</span>
+                <span class="component-name">Return Wire</span>
+            </button>
+
+            <span class="connection-label label-top">OUTGOING</span>
+            <span class="connection-label label-bottom">RETURN</span>
+        </div>
+
+        <div class="status" id="status">
+            <span class="status-dot"></span>
+            <span id="statusText">The circuit is incomplete. Select the battery to begin.</span>
+        </div>
+
+        <div class="explanation" id="explanation">
+            <strong>🎉 Circuit completed!</strong><br>
+            Electricity flows from one terminal of the battery, through the connecting wire and bulb, and back to the other battery terminal. This creates a closed loop, allowing current to flow and the bulb to glow.
+        </div>
+
+        <div class="controls">
+            <button class="btn secondary" id="breakBtn">Break the Loop</button>
+            <button class="btn secondary" id="resetBtn">↻ Reset</button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>🧩 Circuit Components</h2>
+            <span class="level">4 PIECES</span>
+        </div>
+
+        <div class="parts-grid">
+            <button class="part" data-select="battery">
+                <span>🔋</span>
+                <strong>Battery</strong>
+            </button>
+            <button class="part" data-select="wire">
+                <span>〰️</span>
+                <strong>Connecting Wire</strong>
+            </button>
+            <button class="part" data-select="bulb">
+                <span>💡</span>
+                <strong>Bulb</strong>
+            </button>
+            <button class="part" data-select="returnWire">
+                <span>〰️</span>
+                <strong>Return Wire</strong>
+            </button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>📘 What Did You Learn?</h2>
+        </div>
+
+        <div class="lesson">
+            <div class="lesson-card">
+                <h3>🔒 Closed Circuit</h3>
+                <p>A complete, unbroken path allows electric current to flow. The bulb lights up.</p>
+            </div>
+            <div class="lesson-card">
+                <h3>🔓 Open Circuit</h3>
+                <p>A break anywhere in the path stops the current. The bulb switches off.</p>
+            </div>
+        </div>
+    </section>
+    </div>
+
+<script>
+const parts = {
+    battery: document.getElementById("battery"),
+    wire: document.getElementById("wire"),
+    bulb: document.getElementById("bulb"),
+    returnWire: document.getElementById("returnWire")
+};
+
+const order = ["battery", "wire", "bulb", "returnWire"];
+const partNames = {
+    battery: "Battery",
+    wire: "Connecting wire",
+    bulb: "Bulb",
+    returnWire: "Return wire"
+};
+
+let connected = [];
+let broken = false;
+let completed = false;
+
+const status = document.getElementById("status");
+const statusText = document.getElementById("statusText");
+const explanation = document.getElementById("explanation");
+
+function updateStatus(message, type = "") {
+    status.className = "status";
+    if (type) status.classList.add(type);
+    statusText.textContent = message;
+}
+
+function updateCircuit() {
+    order.forEach(part => {
+        const element = parts[part];
+        const isConnected = connected.includes(part);
+
+        element.classList.toggle("connected", isConnected);
+        element.disabled = isConnected || completed;
+    });
+
+    document.querySelectorAll(".part").forEach(button => {
+        button.classList.toggle("used", connected.includes(button.dataset.select));
+    });
+
+    const lit = completed && !broken;
+
+    parts.bulb.classList.toggle("lit", lit);
+    document.getElementById("bulbIcon").textContent = lit ? "🌟" : "💡";
+    document.getElementById("bulbName").textContent = lit ? "Lit!" : "Bulb";
+
+    document.getElementById("topPath").classList.toggle(
+        "active",
+        connected.includes("battery") &&
+        connected.includes("wire") &&
+        connected.includes("bulb")
+    );
+
+    document.getElementById("bottomPath").classList.toggle(
+        "active",
+        completed && !broken
+    );
+
+    explanation.classList.toggle("show", completed && !broken);
+}
+
+function selectPart(part) {
+    if (completed || connected.includes(part)) return;
+
+    const expected = order[connected.length];
+
+    if (part === expected) {
+        connected.push(part);
+        updateCircuit();
+
+        if (connected.length === order.length) {
+            completed = true;
+            updateCircuit();
+            updateStatus("The loop is complete! Current can flow. Your bulb is glowing!", "success");
+        } else {
+            updateStatus(`${partNames[part]} connected! Now add the ${partNames[order[connected.length]].toLowerCase()}.`, "success");
+        }
+    } else {
+        updateStatus(`Not quite! Connect the ${partNames[expected].toLowerCase()} next.`, "error");
+    }
+}
+
+function breakCircuit() {
+    if (!completed || broken) {
+        updateStatus("Complete the circuit first, then try breaking the loop.");
+        return;
+    }
+
+    broken = true;
+    updateCircuit();
+    updateStatus("Circuit broken! The path is now open, so current stops flowing and the bulb switches off.", "error");
+}
+
+function resetCircuit() {
+    connected = [];
+    broken = false;
+    completed = false;
+
+    updateCircuit();
+    updateStatus("Circuit reset. Select the battery to begin.");
+}
+
+Object.keys(parts).forEach(part => {
+    parts[part].addEventListener("click", () => selectPart(part));
+});
+
+document.querySelectorAll(".part").forEach(button => {
+    button.addEventListener("click", () => selectPart(button.dataset.select));
+});
+
+document.getElementById("breakBtn").addEventListener("click", breakCircuit);
+document.getElementById("resetBtn").addEventListener("click", resetCircuit);
+
+updateCircuit();
+</script>
+
+</body>
+</html>
